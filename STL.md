@@ -148,7 +148,7 @@
 
 1. set的key==value，且不允许有相同的key；且不允许修改其key和value；
 2. set和list一样，插入删除之后，**之前的迭代器依然有效**；
-3. **为什么使用set的find函数比algorithm的更有效？**因为我们的set底层实现是红黑树，所以自带的find是基于红黑树的搜索，而algorithm的find**只是普通的循环搜索；**
+3. **为什么使用set的find函数比algorithm的find更有效？**因为我们的set底层实现是红黑树，所以自带的find是基于红黑树的搜索，而algorithm的find**只是普通的循环搜索；**
 
 ### map
 
@@ -179,5 +179,485 @@
 
 ## 算法
 
+1. STL中的算法很多都需要头文件algorithm或numeric；
 
+2. 算法总览：
+
+   ![](img/stl1.png)
+
+   ![](img/stl2.png)
+
+   ![](img/stl3.png)
+
+   ![](img/stl4.png)
+
+3. 重点算法讲解：
+
+   1. 一般使用STL的算法需要配合**两个迭代器**，且其区间一般为左闭右开；
+
+   2. **迭代器是一种行为类似于指针的对象，为了实现STL函数的泛化；**
+
+   3. accumulate：**用于计算first到end之间所有值的和**
+
+      ①template<class inputiterator,class T>
+
+      ​    T accumulate(inputiterator first,inputiterator end,T init)；
+
+      其查找范围为[first，end)，init是运算的初值（**防止first与end之间一个元素都没有**）；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      using namespace std;
+      int main() {
+      	//vector<int> wh{ 5,1,2,0,3,9,7,4,8,6 };
+      	vector<int> wh{ 1,2,3,4,5,6,7,8,9 };
+      	int sum = accumulate(wh.begin(), wh.end(), 0);
+      	cout << sum << endl;//输出45
+      	return 0;
+      }
+      ```
+
+      
+
+      ②template<class inputiterator,class T>
+
+      ​    T accumulate(inputiterator first,inputiterator end,T init,BinaryOperation binary_op)；
+
+      前三个参数与前面一致，第四个参数是自定义的仿函数；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      using namespace std;
+      int main() {
+      	//vector<int> wh{ 5,1,2,0,3,9,7,4,8,6 };
+      	vector<int> wh{ 1,2,3,4,5,6,7,8,9 };
+      	int sum = accumulate(wh.begin(), wh.end(), 0, [](int x, int y) {return x + 3*y; });
+      	cout << sum << endl;//输出135
+      	return 0;
+      }
+      ```
+
+      这里的底层实现为init=binary_op（init，wh[i]），相当于将1~9的每个数乘以3再求和；
+
+   4. inner_product：求两个数组的内积，也就是乘积和；
+
+      ①template<class inputiterator,class T>
+
+      ​    T inner_product(inputiterator first1,inputiterator end1,inputiterator first2,T init)；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      using namespace std;
+      int main() {
+      	vector<int> res{ 9,8,7,6,5,4,3,2,1 }, wh{ 1,2,3,4,5,6,7,8,9 };
+      	int sum = inner_product(wh.begin(), wh.end(), res.begin(),0);
+      	cout <<sum<< endl;//输出165，也就是0+9*1+8*2+7*3+...
+      	return 0;
+      }
+      ```
+
+      其底层运算实现为init=init+\*first1 \* \*first2；
+
+      ②template<class inputiterator,class T>
+
+      ​    T inner_product(inputiterator first1,inputiterator end1,inputiterator first2,T init,binaryoperator binary_op1,binaryoperator binary_op2)；
+
+      前四个参数与上面一直，第五和第六个都是仿函数，其底层实现逻辑为：
+
+      **init = binary_op1（init，binary_op2（\*first1,\*first2））**
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      using namespace std;
+      int main() {
+      	vector<int> res{ 9,8,7,6,5,4,3,2,1 }, wh{ 1,2,3,4,5,6,7,8,9 };
+      	int sum = inner_product(wh.begin(), wh.end(), res.begin(),0,plus<int>(),minus<int>());
+      	cout <<sum<< endl;//输出0,也就是0+(9-1)+(8-2)+...
+      	return 0;
+      }
+      ```
+
+   5. partial_sum：计算数组的局部和
+
+      ①template<class inputiterator,class T>
+
+      ​    outputiterator partial_sum(inputiterator first,inputiterator end,outputiterator result)；
+
+      前两个参数表示运算的范围，第三个参数用于接收结果。
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      using namespace std;
+      int main() {
+      	vector<int> wh2{ 9,8,7,6,5,4,3,2,1 }, wh1{ 1,2,3,4,5,6,7,8,9 },res(9,0);
+      	partial_sum(wh1.begin(), wh1.end(), res.begin());
+      	for (int i = 0; i < 9; ++i)
+      		cout << res[i] << " ";//输出1 3 6 10 15 21 28 36 45
+      	return 0;
+      }
+      ```
+
+      其中元素res[i]表示wh1中first到i之间所有数的和；其中res第一个元素固定为wh1第一个元素；
+
+      ②template<class inputiterator,class T>
+
+      ​    outputiterator partial_sum(inputiterator first,inputiterator end,outputiterator result,binaryoperator binary_op)；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      using namespace std;
+      int main() {
+      	vector<int> wh2{ 9,8,7,6,5,4,3,2,1 }, wh1{ 1,2,3,4,5,6,7,8,9 },res(9,0);
+      	partial_sum(wh1.begin(), wh1.end(), res.begin(),minus<int>());
+      	for (int i = 0; i < 9; ++i)
+      		cout << res[i] << " ";//输出1 -1 -4 -8 -13 -19 -26 -34 -43
+      	return 0;
+      }
+      ```
+
+      其运算的逻辑为res[i]=binary_op（wh1的前i-1项结果，wh1[i]）；
+
+   6. adjacent_difference：计算每两个相邻的元素之间的差值
+
+      ①template<class inputiterator,class T>
+
+      ​    outputiterator adjacent_difference(inputiterator first,inputiterator end,outputiterator result)；
+
+      
+
+      前两个参数表示运算的区间，第三个参数result表示接收答案的一个迭代器；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      using namespace std;
+      int main() {
+      	vector<int> res(9,0),wh{ 1,2,3,4,5,6,7,8,9 };
+      	adjacent_difference(wh.begin(), wh.end(), res.begin());
+      	for (int i = 0; i < 9; ++i)
+      		cout << res[i] << " ";//输出8个1
+      	cout << endl;
+      	return 0;
+      }
+      ```
+
+      注意其返回值是一个迭代器，指向res的下一个地址；
+
+      ②template<class inputiterator,class T>
+
+      ​    outputiterator adjacent_difference(inputiterator first,inputiterator end,outputiterator result,binaryoperator binary_op)；
+
+      前三个函数同上，第四个参数是自定义的一个运算函数；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      using namespace std;
+      int main() {
+      	vector<int> res(9,0),wh{ 1,2,3,4,5,6,7,8,9 };
+      	adjacent_difference(wh.begin(), wh.end(), res.begin(),plus<int>());
+      	for (int i = 0; i < 9; ++i)
+      		cout << res[i] << " ";//输出1 3 5 7 9 11 13 15 17
+      	cout << endl;
+      	return 0;
+      }
+      ```
+
+      注意，第一个元素必然会在输出里面，传入的函数的运算逻辑是binary_op(前一个数，后一个数)；
+
+4. power（T n，int x，binaryoperator op）函数，其中的op默认为乘积函数。幂运算函数，其底层实现为**二进制运算**，参考leetcode50。
+
+   大概思路为n^10，10的二进制表示为1010，所以n^10=n^8\*n^2，因此可以先计算n^2然后再乘上n^8即可；
+
+5. iota（inputoperator first，inputiterator end，T value）函数，**在first到end的区间内填充value，value+1，value+2，...**
+
+   ```c++
+   #include<iostream>
+   #include<vector>
+   #include<algorithm>
+   #include<numeric>
+   #include<functional>
+   using namespace std;
+   int main() {
+   	vector<int> wh2{ 9,8,7,6,5,4,3,2,1 }, wh1{ 1,2,3,4,5,6,7,8,9 },res(9,0);
+   	iota(wh1.begin(), wh1.end(), 5);
+   	for (int i = 0; i < 9; ++i)
+   		cout << wh1[i] << " ";//输出5 6 7 8 9 10 11 12 13
+   	return 0;
+   }
+   ```
+
+4. max和min函数都有两个版本：
+
+   ①template<class T>
+
+   ​    const T& max（const T &a,const T &b）{
+
+   ​		return a>b?a:b;
+
+   }
+
+   ②template<class T>
+
+   ​    const T& max（const T &a,const T &b,compare op）{
+
+   ​		return op(a,b)?a:b;
+
+   }
+
+5. **copy算法：**可以将输入区间[f,l)的元素copy到输出区间[r,r+(l-f))中。
+
+   **特别注意区间重叠的情况：**
+
+   1. result的尾部与（first，end）重叠
+   2. result的头部与（first，end）重叠
+
+   ![](img/stl5.png)
+
+   3. 如果使用的数组是char[]，则不用在意这个问题。因为此时调用copy会调用memmove（**对输入区间进行复制，然后再返回输出空间**），重叠问题不会出现；如果使用的是deque则有可能会出现重叠区间覆盖的问题；如果使用vector又不会出现问题；**区别在于，vector和char[]使用的迭代器或者指针，都是C++自带的指针，会调用memmove保证不会出现问题；**而deque使用的是类似指针的迭代器，所以没有调用memmove，有可能会出现区间覆盖的问题；
+
+   4. 当然，如果result头部与输入区间重叠，**我们可以考虑使用copy_backward，逆向复制**；
+
+   5. copy函数不能生成新的元素，即使使用vector遇到空间不足也不会扩容，所以调用前要保证区间足够大；
+
+   6. 对于一个类的**默认构造函数、拷贝构造函数、赋值运算符、析构函数，**如果有下列三种情况之一的：
+
+      1. 显示定义；
+      2. 类中包含非静态非POD类型的数据成员；
+      3. 有基类；
+
+      则这个类是一个non-trivial的类，就是不平凡的类；POD类型肯定都是平凡的；
+
+      **对于平凡的类型，copy函数会直接调用memmove来提升效率；**
+
+      **对于非平凡的类型，copy函数会调用其赋值运算符进行复制；**
+
+
+
+6. **set相关算法**
+
+   集合set，一共提供了四种算法：**并集（union）、交集（intersection）、差集（differebce）、对称差集（symmetric difference）**；
+
+   1. 这四种算法均要求**区间内元素有序**，所以unordered_set不能用这四种算法啦，哈希表作为底层实现的都不能使用这四种算法；
+
+      ```c++
+      #include<iostream>
+      #include<vector>
+      #include<algorithm>
+      #include<numeric>
+      #include<functional>
+      #include<set>
+      using namespace std;
+      template<class T>
+      struct display {
+      	void operator()(const T &a) {
+      		cout << a << " ";
+      	}
+      };
+      int main() {
+      	int arr1[5] = { 1,3,5,7,9 }, arr2[5] = { 2,4,5,8,9 };
+      	set<int> s1(arr1, arr1 + 5), s2(arr2, arr2 + 5);
+      	for_each(s1.begin(), s1.end(), display<int>());
+      	cout << endl;
+      	for_each(s2.begin(), s2.end(), display<int>());
+      	cout << endl;
+      	vector<int> res(10, 0);
+      	set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), res.begin());
+      	for_each(res.begin(), res.end(), display<int>());
+      	cout << endl;//交集，输出1 2 3 4 5 7 8 9
+      	fill(res.begin(), res.end(), 0);
+      	set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), res.begin());
+      	for_each(res.begin(), res.end(), display<int>());
+      	cout << endl;//并集，输出5 9
+      	fill(res.begin(), res.end(), 0);
+      	set_difference(s1.begin(), s1.end(), s2.begin(), s2.end(), res.begin());
+      	for_each(res.begin(), res.end(), display<int>());
+      	cout << endl;//差集，注意这里是s1-s2，输出1 3 7
+      	fill(res.begin(), res.end(), 0);
+      	set_difference(s2.begin(), s2.end(), s1.begin(), s1.end(), res.begin());
+      	for_each(res.begin(), res.end(), display<int>());
+      	cout << endl;//差集，注意这里是s2-s1，输出2 4 8
+      	fill(res.begin(), res.end(), 0);
+      	set_symmetric_difference(s1.begin(), s1.end(), s2.begin(), s2.end(), res.begin());
+      	for_each(res.begin(), res.end(), display<int>());
+      	cout << endl;//对称差集，就是两个差集的并集，输出1 2 3 4 7 8
+      	return 0;
+      }
+      ```
+
+   2. set_union
+
+      求出两个集合的并集。**注意，其实这个算法可以用于multiset，也就是集合中元素可能有重复；**例如s1中有m个1，s2中有n个1，那么并集中有max（m，n）个1；是一个稳定的算法；
+
+      其底层实现值得学习：首先s1和s2都是有序的，声明两个迭代器指向开头，只要两个迭代器都不为空则执行循环，循环有三种情况：
+
+      ①s1的元素比较小，则此元素加入res，然后迭代器++；
+
+      ②s2的元素比较小，则此元素加入res，然后迭代器++；
+
+      ③s1和s2的元素相等，取s1中的元素加入res，然后两个迭代器++；
+
+      当跳出循环的时候，有一方不为空，则将剩余的元素全部copy到res中；
+
+   3. set_intersection
+
+      两个集合的交集。**注意，其实这个算法可以用于multiset，也就是集合中元素可能有重复；**例如s1中有m个1，s2中有n个1，那么交集中有min（m，n）个1；是一个稳定的算法；
+
+      这个的底层实现就很简单了，首先s1和s2都是有序的，声明两个迭代器指向开头，只要两个迭代器都不为空则执行循环，循环有三种情况：
+
+      ①s1的元素比较小，直接迭代器++；
+
+      ②s2的元素比较小，直接迭代器++；
+
+      ③s1和s2的元素相等，取s1中的元素加入res，然后两个迭代器++；
+
+      当跳出循环的时候，将剩余的元素全部丢弃；
+
+   4. set_difference
+
+      两个集合的差集，即s1中出现的，但是s2中没有的元素集合。**注意，其实这个算法可以用于multiset，也就是集合中元素可能有重复；**例如s1中有m个1，s2中有n个1，那么并集中有max（m-n，0）个1；是一个稳定的算法；
+
+      首先s1和s2都是有序的，声明两个迭代器指向开头，只要两个迭代器都不为空则执行循环，循环有三种情况：
+
+      ①s1的元素比较小，则此元素加入res，然后迭代器++；
+
+      ②s2的元素比较小，直接迭代器++；
+
+      ③s1和s2的元素相等，直接两个迭代器++；
+
+      当跳出循环的时候，有s1不为空，则将剩余的元素全部copy到res中；
+
+   5. set_symmetric_difference
+
+      两个集合的对称差集，即s1中出现的，但是s2中没有的元素，同时s2中出现，但是s1中没有的元素的集合。**注意，其实这个算法可以用于multiset，也就是集合中元素可能有重复；**例如s1中有m个1，s2中有n个1，那么并集中有abs（m-n）个1；是一个稳定的算法；
+
+      首先s1和s2都是有序的，声明两个迭代器指向开头，只要两个迭代器都不为空则执行循环，循环有三种情况：
+
+      ①s1的元素比较小，则此元素加入res，然后迭代器++；
+
+      ②s2的元素比较小，则次元素加入res，然后迭代器++；
+
+      ③s1和s2的元素相等，直接两个迭代器++；
+
+      当跳出循环的时候，有一个不为空，则将剩余的元素全部copy到res中；
+
+7. heap相关算法：make_heap、push_heap、pop_heap、sort_heap；
+
+8. 其他算法：
+
+   一般都是进行单纯的线性移动进行数据的统计和判断等；例如find、count、for_each、remove、reverse、rotate、max_element、min_element等；
+
+   1. 如果vec是一个vector，max_element（vec.begin(),vec.end()）会返回**一个迭代器**，所以要使用cout<<\*max_element（vec.begin(),vec.end()）<<endl;才可以正常输出最大元素的下标；
+
+   2. remove和unique都是**只移除但是不删除的函数**，remove（first，end，value）移除与value相等的元素；unique（first，end）移除重复的元素；
+
+   3. replace（first，end，oldvalue，newvalue）将oldvalue全部替换为newvalue；
+
+   4. replace_if（first，end，op，newvalue），如果op（i）为true，则替换为newvalue；
+
+   5. reverse（first，end）将所有元素翻转；
+
+   6. rotate（first，middle，end）**将[first，middle)的元素全部移动到end的后面**，此时middle变成了这个容器的第一个元素；
+
+      这个的底层实现还是很酷炫的：
+
+      ```c++
+      #include<iostream>
+      #include<algorithm>
+      #include<string>
+      using namespace std;
+      void strratate(int f, int m, int l, string &s) {
+      	if (f == l || f == l - 1)
+      		return;
+      	for (int i = m;;) {
+      		swap(s[i], s[f]);
+      		f++, i++;
+      		if (f == m) {
+      			if (i == l)
+      				return;
+      			m = i;
+      		}
+      		else if (i == l)
+      			i = m;
+      	}
+      }
+      int main() {
+      	string str("ABCDEFGH");
+      	strratate(0, 4, str.size(),str);
+      	cout << str << endl;
+      	return 0;
+      }
+      ```
+
+      还有一个更酷炫的：
+
+      reverse(s[first], s[mid]);
+
+      reverse(s[mid], s[last]);
+
+      reverse(s[first], s[end]);
+
+   7. search（first1，end1，first2，end2）在first1到end1中寻找完全匹配first2到end2的子序列的开头的迭代器，如果没有则返回end1；
+
+      这里居然不是KMP算法，而是最普通的不断回溯的暴力算法；
+
+   8. random_shuufle（first，end）将first到end的元素全部打乱，**要求支持随机访问**；
+
+      其实现还是挺有趣的：
+
+      ![](img/stl6.png)
+
+   9. sort（first，end，op）将first到end的元素按照op的规则排序，**只支持能够随机访问的那些容器**，很多STL容器都有自己的sort成员函数，红黑树那些肯定用自带的；链表不支持随机访问，stack、queue都是由限制的不允许排序，所以就用在vector中多点；
+
+      1. **底层实现是快速排序，**快速排序会不断缩小排序范围，当排序范围小于一个阈值，**就会使用直接插入排序；**此外，如果递归层次太深，还会使用**堆排序**；
+
+      2. 在STL中的sort函数使用**三点取中来选择枢轴**；
+
+      3. 使用直接插入排序的**阈值**因设备而异，一般就取数组长度为n，找到一个2^k<=n的最大的k，这个k就是进行直接插入排序的阈值；
+
+      4. 总结一下：
+
+         ①开始sort之前，会先确定一个直接插入排序**阈值**；
+
+         ②使用**三数取中**找到一个合适的枢轴，进行一次快排，分割成两半继续排序；
+
+         ③如果长度小于阈值，则进入直接插入排序；
+
+         ④如果递归深度大于**2\*阈值**，就调用堆排序；（也就是introsort了）
+
+   10. nth_element（first，nth，end），一次快排，使得first到nth前面的元素全部小于nth到end之间的元素，当然可以加一个op作为第四个参数来指定比较方法；
+
+       其底层实现是不断调用快排的partition，根据返回的分割点与nth进行比较，不断缩小排序范围，直到排序到达分割点；
+
+
+
+## 仿函数
 

@@ -1111,4 +1111,131 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 
    ⑤在数据库中执行任务交给**执行器**处理。首先检查用户是否有权限查询这个表，如果有则调用数据库引擎的接口进行查询；在这里会调用innoDB引擎接口获取这个表的每一行，检查是否ID==10，是则保存结果，否则跳过；
 
-2. 
+
+
+
+
+
+
+
+
+
+### SQL语句专题
+
+1. case语句
+
+   1. 基础用法分为两种：
+
+      1. ````bash
+         case a
+         when '1' then '男'
+         when '2' then '女'
+         else '其他' end
+         ````
+
+      2. ```bash
+         case when a='1' then '男'
+         when a='2' then '女'
+         else '其他' end
+         ```
+
+      其中用法1一般就相当于c++的switch，用法2相当于if、else if；
+
+   2. 对数据进行分组并分析；
+
+      ![](img/sql1.png)
+
+      首先按照country分成3组，然后统计每一组里面的人口数；
+
+      ```bash
+      SELECT  SUM(population), 
+          CASE country  
+              WHEN '中国' THEN '亚洲' 
+              WHEN '印度' THEN '亚洲' 
+              WHEN '日本' THEN '亚洲' 
+              WHEN '美国' THEN '北美洲' 
+              WHEN '加拿大'  THEN '北美洲' 
+              WHEN '墨西哥'  THEN '北美洲' 
+              ELSE '其他' 
+          END 
+      FROM    Table_A 
+      GROUP BY
+          CASE country 
+              WHEN '中国' THEN '亚洲' 
+              WHEN '印度' THEN '亚洲'
+              WHEN '日本' THEN '亚洲' 
+              WHEN '美国' THEN '北美洲' 
+              WHEN '加拿大'   THEN '北美洲' 
+              WHEN '墨西哥'   THEN '北美洲' 
+              ELSE '其他' 
+          END;
+      ```
+
+   3. 完成不同条件的分组：
+
+      ![](img/sql2.png)
+
+      这里虽然性别是一列，但是我们可以将其作为两列来展示；
+
+      ```bash
+      SELECT country, 
+          SUM( CASE WHEN sex = '1' THEN  population ELSE 0 END),  --男性人口 
+          SUM( CASE WHEN sex = '2' THEN  population ELSE 0 END)   --女性人口
+      FROM  Table_A  
+      GROUP BY country;
+      ```
+
+      因为group之后可以认为每一个country里面有很多行，使用case不会改变很多行这种情况，所以直接显示会显示第一行；使用sum将所有行合并成一行，所以显示就会正常；
+
+   4. 根据条件进行update
+
+      例如我们要将工资高于5000的人降薪百分之10，工资处于2000-5000的加薪百分之15，如何操作？
+
+      ```bash
+      --条件1
+      UPDATE Personnel  SET salary = salary * 0.9  WHERE salary >= 5000;
+      --条件2
+      UPDATE Personnel  SET salary = salary * 1.15
+      WHERE salary >= 2000 AND salary < 4600;
+      ```
+
+      使用两条进行操作会有一个缺点：如果一个人工资本来是5000，会**先降薪后加薪**，这是一个bug；因此必须一步到位：
+
+      ```bash
+      UPDATE Personnel
+      SET salary =
+      CASE WHEN salary >= 5000  　                THEN salary * 0.9
+           WHEN salary >= 2000 AND salary < 4600  THEN salary * 1.15
+      ELSE salary END; 
+      ```
+
+      对于不同的工资选择不同的操作，值得学习；
+
+   5. 两个表格的数据是否一致的检查：
+
+      如果有两个表，tbl_A,tbl_B，两个表中都有keyCol列。现在我们对两个表进行比较，tbl_A中的keyCol列的数据如果在tbl_B的keyCol列的数据中可以找到，返回结果'Matched',如果没有找到，返回结果'Unmatched'。
+      要实现下面这个功能，可以使用下面两条语句：
+
+      ```bash
+      --使用IN的时候
+      SELECT keyCol,
+      CASE WHEN keyCol IN ( SELECT keyCol FROM tbl_B )  THEN 'Matched'
+      ELSE 'Unmatched' END Label
+      FROM tbl_A; 
+      
+      --使用EXISTS的时候
+      SELECT keyCol,
+      CASE WHEN EXISTS ( SELECT * FROM tbl_B  WHERE tbl_A.keyCol = tbl_B.keyCol )  THEN 'Matched'  ELSE 'Unmatched' END Label
+      FROM tbl_A;
+      ```
+
+      这个用法就是根据条件输出不同的结果，而不是表中的结果，因此使用case会比较好；
+
+   6. 
+
+2. 一些操作表的操作：
+
+   1. alter table T add sex int default 1；在表T中增加一列sex，默认值为1；
+   2. alter table T drop column sex；移除表T中sex这一列；
+   3. alter table T drop primary key；移除表T中的主键；
+   4. **alter table T add primary key （c_id,sex）；给表T添加主键（c_id,sex）**，添加之前要先移除主键；
