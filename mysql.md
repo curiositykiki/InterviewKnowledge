@@ -686,6 +686,83 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 
 
 
+
+
+### 创建索引
+
+给表创建索引一般分成两种，第一种是建表的时候建立，第二种是建表之后建立：
+
+1. 建表是建立：
+
+   ```sql
+   CREATE TABLE projectfile (
+   	id INT AUTO_INCREMENT COMMENT '附件id',
+   	fileuploadercode VARCHAR(128) COMMENT '附件上传者code',
+   	projectid INT COMMENT '项目id;此列受project表中的id列约束',
+   	filename VARCHAR (512) COMMENT '附件名',
+   	fileurl VARCHAR (512) COMMENT '附件下载地址',
+   	filesize BIGINT COMMENT '附件大小，单位Byte',
+   	-- 主键本身也是一种索引（注:也可以在上面的创建字段时使该字段主键自增）
+       PRIMARY KEY (id),
+   	-- 主外键约束（注:project表中的id字段约束了此表中的projectid字段）
+   	FOREIGN KEY (projectid) REFERENCES project (id),
+   	-- 给projectid字段创建了唯一索引(注:也可以在上面的创建字段时使用unique来创建唯一索引)
+   	UNIQUE INDEX (projectid),
+   	-- 给fileuploadercode字段创建普通索引
+   	INDEX (fileuploadercode)
+   	-- 指定使用INNODB存储引擎(该引擎支持事务)、utf8字符编码
+       INDEX (fileuploadercode,projectid)
+   	-- 指定使用INNODB存储引擎(该引擎支持事务)、utf8字符编码
+   ) ENGINE = INNODB DEFAULT CHARSET = utf8 COMMENT '项目附件表';
+   ```
+
+   解析：
+
+   ①UNIQUE:可选。表示索引为唯一性索引。
+   ②FULLTEXT:可选。表示索引为全文索引。
+   ③SPATIAL:可选。表示索引为空间索引。
+   ④INDEX和KEY:用于指定字段为索引，两者选择其中之一就可以了，作用是    一样的。
+   ⑤索引名:可选。给创建的索引取一个新名称。
+   ⑥字段名1:指定索引对应的字段的名称，该字段必须是前面定义好的字段。
+   ⑦长度:可选。指索引的长度，必须是字符串类型才可以使用。
+   ⑧ASC:可选。表示升序排列。
+   ⑨DESC:可选。表示降序排列。
+
+   这里最常用的就是主键PRIMARY KEY了，一般都需要设定；然后需要注意一下唯一索引UNIQUE INDEX，也是很好用的一个索引；第三个就是联合索引了，例如INDEX (fileuploadercode,projectid)就是一个联合索引；
+
+2. 建表之后的索引操作
+
+   1. 新增一个索引，一般使用ALTER或者CREATE
+
+      ```sql
+      -- 假设建表时fileuploadercode字段没创建索引(注:同一个字段可以创建多个索引，但一般情况下意义不大)
+      -- 给projectfile表中的fileuploadercode创建索引
+      ALTER TABLE projectfile ADD UNIQUE INDEX (fileuploadercode);	
+      -- 将id列设置为主键
+      ALTER TABLE index_demo ADD PRIMARY KEY(id) ;
+      -- 将id列设置为自增
+      ALTER TABLE index_demo MODIFY id INT auto_increment;  
+      -- 新增一个索引在fileuploadercode上
+      CREATE UNIQUE INDEX (fileuploadercode) ON projectfile;
+      ```
+
+   2. 查看当前表中的有什么索引
+
+      ```sql
+      show index from 表名；
+      ```
+
+   3. 删除一个索引，使用ALTER或者DROP
+
+      ```sql
+      drop index fileuploadercode1 on projectfile;
+      alter table projectfile drop index s2123;
+      ```
+
+   4. 查看一个sql语句使用了什么索引，就是在select的前面加一个explain，这里就不再赘述了；
+
+
+
 ### 使用视图
 
 视图是虚拟的表，**不包含任何数据**，与包含数据的表不同，视图**只包含使用时动态检索数据的查询。**
@@ -1231,7 +1308,8 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 
       这个用法就是根据条件输出不同的结果，而不是表中的结果，因此使用case会比较好；
 
-   6. 
+
+   
 
 2. 一些操作表的操作：
 
