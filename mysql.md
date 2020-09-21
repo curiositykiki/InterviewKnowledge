@@ -10,7 +10,7 @@
 2. 如果要使用数据库crashcourse，使用命令**USE crashcourse**。这里的USE叫做关键字，这个crashcourse是一个数据库，**里面可以有很多列表。**
 3. 如果想查看当前有哪些数据库，可以使用**SHOW DATABASES**,这里面的mysql和information_schema是系统内部使用的数据库；
 4. 当你进入了一个数据库的时候，可以使用**SHOW TABLES**查看当前这个数据库有**哪些表**；
-5. 在3里我们查看了有哪些表，可以使用**SHOW COLUMNS FROM xxx**，这个xxx指的是3中看到的某一个表，就可以查看这个表；这个命令等价于**DESCRIBE xxx**；
+5. 在4里我们查看了有哪些表，可以使用**SHOW COLUMNS FROM xxx**，这个xxx指的是4中看到的某一个表，就可以查看这个表；这个命令等价于**DESCRIBE xxx**；
 
 
 
@@ -234,7 +234,7 @@ REGEXP表示regular expression
 
 2. 日期和时间处理函数，常用的函数有：
 
-   AddDate（）增加一个日期（天、周等）
+   **AddDate（）增加一个日期（天、周等）**
 
    AddTime（）增加一个时间（时、分等）
 
@@ -244,7 +244,7 @@ REGEXP表示regular expression
 
    Date（）返回日期时间的日期部分
 
-   DateDiff（）计算两个日期之间的差
+   **DateDiff（）计算两个日期之间的差**
 
    Date_Add（）日期运算
 
@@ -260,7 +260,7 @@ REGEXP表示regular expression
 
    Month（）返回日期的月份
 
-   Now（）返回当前日期和时间
+   **Now（）返回当前日期和时间**
 
    Second（）返回时间的秒部分
 
@@ -278,7 +278,7 @@ REGEXP表示regular expression
 
    **FROM y **
 
-   **WHERE x = '2005-09-01'**这种智能匹配只有日期没有时间的值，如果值带有时间就凉了；
+   **WHERE x = '2005-09-01'**这种只能匹配只有日期没有时间的值，如果值带有时间就凉了；
 
    ②
 
@@ -336,11 +336,11 @@ REGEXP表示regular expression
 | SUM（）   |   返回某列的和   |
 | COUNT（） |  返回某列的行数  |
 
-①AVG只能获得某列的均值，可以使用where进行约束，但是必须给出列明，即select AVG（uid）AS avg_uid ；此外，AVG自动忽略UNLL；
+①AVG只能获得某列的均值，可以使用where进行约束，但是必须给出列名，即select AVG（uid）AS avg_uid ；此外，**AVG自动忽略UNLL**；
 
-②COUNT函数统计某列的行数，使用COUNT（\*）的时候**不会忽略NULL**，具体指出列明就会**忽略NULL**；
+②COUNT函数统计某列的行数，使用COUNT（\*）的时候**不会忽略NULL**，具体指出列名就会**忽略NULL**；
 
-③MIN、MAX、SUM类似，指定某一列名的时候会忽略NULL；此外，SUM（a\*b）会统计a、b这两列乘积的和；
+③MIN、MAX、SUM类似，指定某一列名的时候会**忽略NULL**；此外，SUM（a\*b）会统计a、b这两列乘积的和；
 
 **DISTINCT关键字**
 
@@ -373,7 +373,7 @@ SELECT uid，COUNT（\*） AS orders FROM od GROUP BY uid HAVING COUNT（\*）>=
 
 可以混用WHERE和HAVING吗？答案是肯定的，例如我们只统计物品单价大于10块钱的行就可以：
 
-SELECT uid，COUNT（\*）AS cnt FROM tb WHERE price >=10 GROUP BY uidHAVING COUNT（\*）>=2
+SELECT uid，COUNT（\*）AS cnt FROM tb WHERE price >=10 GROUP BY uid HAVING COUNT（\*）>=2
 
 就可以返回指定数据了。
 
@@ -413,7 +413,7 @@ SELECT uid FROM user WHERE proid IN （SELECT proid FROM pro WHERE item=3）
 
 当两个表具有相同的列，即外键的时候，要使用限定符进行区分，例如：
 
-SECLECT uid，uid_state，（SELECT COUNT（\*） FROM tb2 WHERE tb1.uid=tb2.uid）AS num FROM tb1 ORDER BY uid；这一句首先统计tb2里面tb2.uid与tb1.uid相同的uid的行数，然后将其作为一行展示。
+SECLECT uid，uid_state，（SELECT COUNT（\*） FROM tb2 WHERE tb1.uid=tb2.uid）AS num FROM tb1 ORDER BY uid；这一句首先统计tb2里面tb2.uid与tb1.uid相同的uid的行数，然后将其作为一列展示。
 
 
 
@@ -431,7 +431,7 @@ SECLECT uid，uid_state，（SELECT COUNT（\*） FROM tb2 WHERE tb1.uid=tb2.uid
 
 SELECT uid，price，item FROM tb1，tb2 WHERE tb1.uid=tb2.uid ORDER BY uid，tiem；
 
-这里假设uid，price位于tb1，item位于tb2，我们分别从tb1和tb2抽取数据，过滤使用**完全限定列明**tb1.uid=tb2.uid。
+这里假设uid，price位于tb1，item位于tb2，我们分别从tb1和tb2抽取数据，过滤使用**完全限定列名**tb1.uid=tb2.uid。
 
 **笛卡尔积**：由没有联结关系的表关系返回的结果为笛卡尔积。**检索出的行数是第一个表中的行数乘以第二个表中的行数。**例如上面的语句没有WHERE进行过滤，就会出现很多数据，但是这些数据都是无用的，所以不要忘记WHERE过滤。
 
@@ -481,7 +481,7 @@ SELECT uid，pro，price FROM tb1 WHERE uid IN （1，2）；
 
 **UNION的限制：①n个SELECT需要n-1个UINON进行连接；②SELECT的列必须相同，但是顺序不一定相同；③列数据类型必须至少可以隐式转化达到相同；**
 
-1. 使用UNION默认会将重复的行消除，如果不想消除重复行，需要使用UNION ALL；
+1. 使用UNION默认会将**重复的行消除**，如果不想消除重复行，需要使用UNION ALL；
 2. 可以对UNION后的数据排序，由于只有一个返回结果，所以**ORDER BY**必须放在**最后一个SELECT**之后；
 
 
@@ -593,7 +593,7 @@ SELECT uid，pro，price FROM tb1 WHERE uid IN （1，2）；
 
    一般不会产生输出；顺序不能乱，没有值要用NULL填充，前提是这一列支持NULL值；如果设置了AUTO_INCREMENT的不需要填写；
 
-2. 显示指出数据会更安全，而且还向后兼容，即使列增加了也可以正常工作；此外，还可以减少VALUES的数目，根据前面的列表而定，如果没有指定就要全部VALUES显示表明了；
+2. 显示指出数据会更安全，而且还向后兼容，即使列增加了也可以正常工作；此外，还可以减少VALUES的数目，根据前面的列表而定，如果没有指定就要全部VALUES显式表明了；
 
    INSERT INTO productnotes（uid，name，price，state） VALUES（3，’kiki‘，20，NULL）；
 
@@ -637,7 +637,7 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 
 ### 创建和操纵表
 
-1. 使用**CREATE TABLE**来创建一个表，必须给出表的名称，已经表列的名字和定义；下面是一个例子：
+1. 使用**CREATE TABLE**来创建一个表，必须给出表的名称，以及表列的名字和定义；下面是一个例子：
 
    CREATE TABLE customers
 
@@ -659,7 +659,7 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 
 4. **主键**：在这个表中，必须可以唯一标识某一行，可以是一列或者多列，多列的时候必须这几列唯一标识某一行，使用PRIMARY KEY（l1,l2），此外，主键必然是NOT NULL的，建表后可以改，但是不能使用接受NULL的那一列；
 
-5. 使用**AUTO_INCREMENT**的列在每次INSERT会自动+1，保证安全。但是每个表值允许一列使用AUTO_INCREMENT，并且该列必须被索引；
+5. 使用**AUTO_INCREMENT**的列在每次INSERT会自动+1，保证安全。但是每个表**只允许一列**使用AUTO_INCREMENT，并且该列必须被索引；
 
    那么我们如何知道最后一个值是多少呢？答案是使用**函数last_insert_id()返回最后一次INSERT产生的AUTO_INCREMENT得到的值**，使用SELECT last_insert_id（）就可以用于后续操作了；
 
@@ -692,7 +692,7 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 
 给表创建索引一般分成两种，第一种是建表的时候建立，第二种是建表之后建立：
 
-1. 建表是建立：
+1. 建表时建立：
 
    ```sql
    CREATE TABLE projectfile (
@@ -710,7 +710,7 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
    	UNIQUE INDEX (projectid),
    	-- 给fileuploadercode字段创建普通索引
    	INDEX (fileuploadercode)
-   	-- 指定使用INNODB存储引擎(该引擎支持事务)、utf8字符编码
+   	-- 建立联合索引
        INDEX (fileuploadercode,projectid)
    	-- 指定使用INNODB存储引擎(该引擎支持事务)、utf8字符编码
    ) ENGINE = INNODB DEFAULT CHARSET = utf8 COMMENT '项目附件表';
@@ -1078,7 +1078,7 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
 3. 如果没有使用事务管理，语句都是隐含COMMIT，即自动提交的；如果使用事务管理，只有COMMIT才会使得这个事务提交；
 4. COMMIT和ROLLBACK执行后，**事务会自动关闭**；
 5. **保留点**：在事务中的一个中间状态，使用**SAVEPOINT    sp**创建一个名为sp的保留点；如果要回退到sp这个点，可以使用**ROLLBACK    TO    sp**；事务完成后自动释放所有保留点，也可以调用RELEASE   SAVEPOINT释放所有保留点；
-6. 使用**SET    autocommit=0**可以关闭自动提交，此时只有使用COMMIT才会提交；这个关键字是以连接为单位的，而不是数据库；
+6. 使用**SET    autocommit=0**可以关闭自动提交，此时只有使用COMMIT才会提交；这个关键字是**以连接为单位的，而不是数据库**；
 
 
 
@@ -1309,7 +1309,7 @@ MySQL没有撤销，所以更新删除之前可以先select检查一下；
       这个用法就是根据条件输出不同的结果，而不是表中的结果，因此使用case会比较好；
 
 
-   
+
 
 2. 一些操作表的操作：
 

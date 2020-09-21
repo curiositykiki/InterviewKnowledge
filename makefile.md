@@ -278,7 +278,7 @@
 
    bigoutput littleoutput ： text.g
 
-   ​		generate  text.g -$（subst output,,$@） > $@
+   ​		generate  text.g -$（substr output,,$@） > $@
 
    等价于
 
@@ -290,7 +290,7 @@
 
    ​		generate text.g -little > littleoutput
 
-   这里的**$()**是一个**函数**，subst是函数名，output是参数，$@是目标的集合（这里就是指bigoutput和littleoutput）。
+   这里的**$()**是一个**函数**，substr是函数名，output是参数，$@是目标的集合（这里就是指bigoutput和littleoutput）。
 
    **$(substr a,b,$@)的作用是，将$@目标集里面的所有元素的子串a替换为子串b，这里b为空，那就是删掉$@里面所有元素的a这个子串。**
 
@@ -338,7 +338,7 @@ foo.elc ：foo.el
 
 filter是一个函数，后面的都是参数；
 
-**$<指的是依赖集合的目标；**
+**$<指的是依赖集合的第一个依赖；**
 
 **$@指的是目标集合里的目标；**
 
